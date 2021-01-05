@@ -11,3 +11,5 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "develop")
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = os.getenv("APP_PORT", "8000")
 
+MONGO_DB_CONN = os.getenv("MONGO_DB_CONN")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")

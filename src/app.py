@@ -1,18 +1,21 @@
 import asyncio
 import logging
 
+import motor.motor_asyncio
+import motor.core as motor_core
 from aiohttp import web
 import aiohttp_debugtoolbar
 import uvloop
 
 import settings
-import views
 
 logger = logging.getLogger(__name__)
 
 
 class WebApp(web.Application):
     """ Extended web Application """
+    db_client: motor_core.AgnosticClient
+    db: motor_core.AgnosticDatabase
 
 
 async def create_app() -> WebApp:
@@ -23,10 +26,13 @@ async def create_app() -> WebApp:
         middlewares.append(aiohttp_debugtoolbar.middleware)
 
     app = WebApp(middlewares=middlewares, logger=logger)
+    app.db_client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGO_DB_CONN)
+    app.db = app.db_client[settings.MONGO_DB_NAME]
 
     if settings.DEBUG:
         aiohttp_debugtoolbar.setup(app, intercept_redirects=False)
 
+    import views
     app.router.add_route(method="*", path="/api/playlists/", handler=views.PlaylistsAPIView)
 
     return app
