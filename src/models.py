@@ -10,10 +10,8 @@ class Videos(BaseModel):
 
 
 class Playlist(BaseModel):
-    id: Optional[str]
-    url = str
-    description = Optional[str]
-    videos = List[Videos]
-
-    class Config:
-        arbitrary_types_allowed = True
+    id: Optional[str] = None
+    url: str
+    user_id: int
+    description: Optional[str]
+    videos: List[Videos] = []
