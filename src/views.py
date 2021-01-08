@@ -1,10 +1,13 @@
+import asyncio
 import json
 
 from aiohttp import web
+from aiokafka import AIOKafkaProducer
 from motor.core import AgnosticCollection
 
 from app import WebApp
 from models import Playlist
+from src import settings
 
 
 class PlaylistsAPIView(web.View):
@@ -33,4 +36,24 @@ class PlaylistsAPIView(web.View):
             return web.json_response({"message": f"invalid request: {e}"}, status=400)
 
         await self.collection.insert_one(playlist.dict())
+        await self.publish_message(playlist.dict())
         return web.json_response(playlist.dict(), status=201)
+
+    @staticmethod
+    async def publish_message(message: dict):
+        loop = asyncio.get_event_loop()
+        producer = AIOKafkaProducer(loop=loop, bootstrap_servers=settings.KAFKA_CONN)
+        message = json.dumps(message).encode("utf-8")
+
+        # Get cluster layout and initial topic/partition leadership information
+        await producer.start()
+        try:
+            # Produce message
+            await producer.send_and_wait(
+                settings.KAFKA_TOPIC, message,
+                key=b"new-playlist-key",
+                headers=[("content-type", b"application/json")]
+            )
+        finally:
+            # Wait for all pending messages to be delivered or expire.
+            await producer.stop()
