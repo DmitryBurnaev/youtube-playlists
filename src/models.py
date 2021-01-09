@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class Videos(BaseModel):
     id: str
     url: str
-    description: str
+    description: str = None
 
 
 class Playlist(BaseModel):
